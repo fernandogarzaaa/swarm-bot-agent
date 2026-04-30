@@ -32,6 +32,22 @@ export function defaultPolicy(repoPath: string, mode: RunPolicy["mode"]): RunPol
     allowPr: process.env.SWARM_ALLOW_PR === "true",
     allowMcp: process.env.SWARM_ALLOW_MCP !== "false",
     allowCopilot: process.env.SWARM_ALLOW_COPILOT === "true",
-    maxChangedFiles: Number.parseInt(process.env.SWARM_MAX_CHANGED_FILES || "12", 10)
+    maxChangedFiles: Number.parseInt(process.env.SWARM_MAX_CHANGED_FILES || "12", 10),
+    githubRepo: process.env.SWARM_GITHUB_REPO || undefined,
+    copilotCustomAgent: process.env.SWARM_COPILOT_AGENT || undefined,
+    followCopilot: process.env.SWARM_COPILOT_FOLLOW === "true",
+    brainProvider:
+      process.env.SWARM_BRAIN_PROVIDER === "copilot-cli"
+        ? "copilot-cli"
+        : process.env.SWARM_BRAIN_PROVIDER === "openai"
+          ? "openai"
+          : "none",
+    allowCopilotBrain: process.env.SWARM_ALLOW_COPILOT_BRAIN === "true",
+    allowOpenAIBrain: process.env.SWARM_ALLOW_OPENAI_BRAIN === "true",
+    copilotModel: process.env.SWARM_COPILOT_MODEL || undefined,
+    copilotReasoningEffort: process.env.SWARM_COPILOT_REASONING_EFFORT as RunPolicy["copilotReasoningEffort"] | undefined,
+    openaiModel: process.env.SWARM_OPENAI_MODEL || "gpt-4.1-mini",
+    openaiBaseUrl: process.env.SWARM_OPENAI_BASE_URL || "https://api.openai.com/v1",
+    openaiTokenCommand: process.env.SWARM_OPENAI_TOKEN_COMMAND || undefined
   };
 }

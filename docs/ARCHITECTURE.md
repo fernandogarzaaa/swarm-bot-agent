@@ -32,6 +32,25 @@ That is the implementable surface: stateful behavior that can explain and adjust
 - `apply`: create branch, commit existing local changes, push, and open PR. Requires `SWARM_ALLOW_PUSH=true` and `SWARM_ALLOW_PR=true`.
 - `delegate-copilot`: call GitHub Copilot cloud agent through `gh agent-task create`. Requires GitHub CLI 2.80+ and `SWARM_ALLOW_COPILOT=true`.
 
+## Brain Providers
+
+Swarm Bot treats model access as a replaceable brain provider:
+
+- `none`: deterministic static fallback for tests and offline planning.
+- `copilot-cli`: calls GitHub Copilot CLI with `copilot -p` for reasoning guidance only. It denies shell/write tools by default so Copilot is not a delegated worker.
+- `openai`: calls the OpenAI Responses API with a server-side bearer token from `OPENAI_API_KEY` or a token-command hook.
+
+Provider guards:
+
+- `SWARM_BRAIN_PROVIDER=copilot-cli`
+- `SWARM_ALLOW_COPILOT_BRAIN=true`
+- `SWARM_BRAIN_PROVIDER=openai`
+- `SWARM_ALLOW_OPENAI_BRAIN=true`
+- `OPENAI_API_KEY=<server-side secret>`
+- `SWARM_OPENAI_TOKEN_COMMAND=<optional command that prints a short-lived bearer token>`
+
+The token command is the integration point for a host app that performs OAuth or sign-in. The token is read from stdout and is never written to repository files.
+
 ## GitHub Copilot Integration
 
 GitHub's current supported automation path is the Copilot cloud agent:
@@ -41,6 +60,8 @@ GitHub's current supported automation path is the Copilot cloud agent:
 - The feature is public preview and subject to change.
 
 Swarm Bot wraps that path instead of pretending there is a stable private Copilot API.
+
+For Copilot-as-brain behavior, use the separate `copilot-cli` brain provider. This keeps reasoning guidance separate from background PR delegation.
 
 ## MCP Integration
 
@@ -52,6 +73,27 @@ Swarm Bot wraps that path instead of pretending there is a stable private Copilo
 - `tools/call`.
 
 Use `config/mcp.servers.example.json` as the starting point.
+
+`McpHealthRegistry` adds OpenChimera-style health tracking with failure counts and exponential backoff. `HookPipeline` supports pre/post tool policy hooks for allowlists and blocked capabilities.
+
+## Task Loop
+
+The task loop is AppForge/Project-Evo inspired:
+
+1. Detect signals: CI failure, failing tests, benchmark regression, outdated dependencies, missing tests.
+2. Generate and dedupe queued tasks.
+3. Persist checkpoints before scan/dispatch/complete phases.
+4. Ask the configured brain provider for a plan.
+5. Run in `plan`, `dry-run`, `apply`, or explicit `delegate-copilot` mode.
+6. Persist memory and reflection outcomes.
+
+Commands:
+
+- `scan`
+- `queue`
+- `next-task`
+- `mcp-health`
+- `run-loop`
 
 ## Safety Defaults
 

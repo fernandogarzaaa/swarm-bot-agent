@@ -32,6 +32,44 @@ $env:SWARM_ALLOW_COPILOT="true"
 node dist/cli.js run --repo D:\target-repo --mode delegate-copilot --title "Fix CI" --body "Investigate failures and open a PR."
 ```
 
+Signal and queue workflow:
+
+```powershell
+node dist/cli.js scan --repo D:\target-repo
+node dist/cli.js queue --repo D:\target-repo
+node dist/cli.js next-task
+node dist/cli.js run-loop --repo D:\target-repo --mode plan
+```
+
+MCP health:
+
+```powershell
+node dist/cli.js mcp-health --mcp config\mcp.servers.example.json
+```
+
+Brain provider mode:
+
+```powershell
+$env:SWARM_BRAIN_PROVIDER="openai"
+$env:SWARM_ALLOW_OPENAI_BRAIN="true"
+$env:OPENAI_API_KEY="<server-side secret>"
+node dist/cli.js run-loop --repo D:\target-repo --mode plan
+```
+
+Copilot as a reasoning brain:
+
+```powershell
+$env:SWARM_BRAIN_PROVIDER="copilot-cli"
+$env:SWARM_ALLOW_COPILOT_BRAIN="true"
+node dist/cli.js run-loop --repo D:\target-repo --mode plan
+```
+
+For a sign-in or OAuth-backed app, provide a command that prints a short-lived bearer token:
+
+```powershell
+$env:SWARM_OPENAI_TOKEN_COMMAND="my-auth-helper get-openai-token"
+```
+
 Direct PR mode requires all relevant guards:
 
 ```powershell

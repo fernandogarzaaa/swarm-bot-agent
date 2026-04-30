@@ -4,6 +4,9 @@ import { McpBridge } from "./mcp.js";
 import { SwarmBotAgent } from "./agent.js";
 import { defaultPolicy, loadIdentity, loadMcpConfig } from "./config.js";
 import { AgentTask, AutonomyMode } from "./types.js";
+import { detectSwarmSignals } from "./signals.js";
+import { generateTasksFromSignals, TaskQueue } from "./tasks.js";
+import { McpHealthRegistry } from "./mcp-health.js";
 
 function readArg(name: string, fallback = ""): string {
   const index = process.argv.indexOf(name);
@@ -44,8 +47,42 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (command === "scan") {
+    console.log(JSON.stringify(await detectSwarmSignals(repo, { expensive: readArg("--expensive", "false") === "true" }), null, 2));
+    return;
+  }
+
+  if (command === "queue") {
+    const queue = new TaskQueue(readArg("--queue", "state/task-queue.json"));
+    const signals = await detectSwarmSignals(repo, { expensive: readArg("--expensive", "false") === "true" });
+    console.log(JSON.stringify(queue.enqueue(generateTasksFromSignals(signals)), null, 2));
+    return;
+  }
+
+  if (command === "next-task") {
+    const queue = new TaskQueue(readArg("--queue", "state/task-queue.json"));
+    console.log(JSON.stringify(queue.next() ?? null, null, 2));
+    return;
+  }
+
+  if (command === "mcp-health") {
+    const registry = new McpHealthRegistry(loadMcpConfig(readArg("--mcp", "config/mcp.servers.json")), readArg("--health", "state/mcp-health.json"));
+    console.log(JSON.stringify(await registry.probeAll(), null, 2));
+    return;
+  }
+
+  if (command === "run-loop") {
+    console.log(await agent.runLoopOnce(readArg("--queue", "state/task-queue.json")));
+    return;
+  }
+
   console.log(`Usage:
   swarm-bot self-check --repo <path>
+  swarm-bot scan --repo <path>
+  swarm-bot queue --repo <path>
+  swarm-bot next-task
+  swarm-bot mcp-health --mcp config/mcp.servers.example.json
+  swarm-bot run-loop --repo <path> --mode plan
   swarm-bot run --repo <path> --mode plan --title "..." --body "..."
   swarm-bot run --repo <path> --mode delegate-copilot --title "..." --body "..."
 
@@ -54,6 +91,15 @@ Guard env:
   SWARM_ALLOW_PR=true
   SWARM_ALLOW_COPILOT=true
   SWARM_ALLOW_MCP=false
+  SWARM_GITHUB_REPO=owner/repo
+  SWARM_COPILOT_AGENT=swarm-bot
+  SWARM_COPILOT_FOLLOW=true
+  SWARM_BRAIN_PROVIDER=copilot-cli
+  SWARM_ALLOW_COPILOT_BRAIN=true
+  SWARM_BRAIN_PROVIDER=openai
+  SWARM_ALLOW_OPENAI_BRAIN=true
+  OPENAI_API_KEY=<server-side secret>
+  SWARM_OPENAI_TOKEN_COMMAND=<optional command that prints an OAuth/access token>
 `);
 }
 

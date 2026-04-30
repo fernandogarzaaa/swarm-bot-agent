@@ -68,11 +68,32 @@ export class GitHubAdapter {
     requireCapability(this.policy, "copilot");
     const result = await runCommand(
       "gh",
-      ["agent-task", "create", `${task.title}\n\n${task.body}`, "--base", this.policy.baseBranch],
+      buildCopilotAgentArgs(`${task.title}\n\n${task.body}`, {
+        base: this.policy.baseBranch,
+        repo: this.policy.githubRepo,
+        customAgent: this.policy.copilotCustomAgent,
+        follow: this.policy.followCopilot
+      }),
       this.policy.repoPath,
       { timeoutMs: 120000 }
     );
     assertOk(result);
     return result.stdout;
   }
+}
+
+export interface CopilotAgentOptions {
+  base?: string;
+  repo?: string;
+  customAgent?: string;
+  follow?: boolean;
+}
+
+export function buildCopilotAgentArgs(prompt: string, options: CopilotAgentOptions = {}): string[] {
+  const args = ["agent-task", "create", prompt];
+  if (options.base) args.push("--base", options.base);
+  if (options.repo) args.push("--repo", options.repo);
+  if (options.customAgent) args.push("--custom-agent", options.customAgent);
+  if (options.follow) args.push("--follow");
+  return args;
 }
