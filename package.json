@@ -10,6 +10,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "ci": "npm run typecheck && npm test",
     "self-check": "node dist/cli.js self-check"
   },
   "devDependencies": {
