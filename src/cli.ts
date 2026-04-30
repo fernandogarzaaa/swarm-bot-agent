@@ -7,6 +7,7 @@ import { AgentTask, AutonomyMode } from "./types.js";
 import { detectSwarmSignals } from "./signals.js";
 import { generateTasksFromSignals, TaskQueue } from "./tasks.js";
 import { McpHealthRegistry } from "./mcp-health.js";
+import { runSandboxSuite, SandboxScenarioName } from "./sandbox.js";
 
 function readArg(name: string, fallback = ""): string {
   const index = process.argv.indexOf(name);
@@ -76,12 +77,27 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (command === "sandbox") {
+    const selected = readArg("--scenario", "all");
+    const scenarios =
+      selected === "all" ? undefined : selected.split(",").map((item) => item.trim()).filter(Boolean) as SandboxScenarioName[];
+    const report = await runSandboxSuite({
+      root: readArg("--sandbox-dir", ".swarm-sandbox"),
+      cliPath: process.argv[1],
+      scenarios,
+      reportPath: readArg("--report", "")
+    });
+    console.log(JSON.stringify(report, null, 2));
+    process.exit(report.summary.failed === 0 ? 0 : 1);
+  }
+
   console.log(`Usage:
   swarm-bot self-check --repo <path>
   swarm-bot scan --repo <path>
   swarm-bot queue --repo <path>
   swarm-bot next-task
   swarm-bot mcp-health --mcp config/mcp.servers.example.json
+  swarm-bot sandbox --scenario all
   swarm-bot run-loop --repo <path> --mode plan
   swarm-bot run --repo <path> --mode plan --title "..." --body "..."
   swarm-bot run --repo <path> --mode delegate-copilot --title "..." --body "..."

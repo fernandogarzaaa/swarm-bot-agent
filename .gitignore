@@ -1,4 +1,5 @@
 dist/
 node_modules/
 state/
+.swarm-sandbox/
 config/mcp.servers.json

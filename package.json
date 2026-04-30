@@ -12,6 +12,7 @@
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test test/*.test.mjs",
     "ci": "npm run typecheck && npm test",
+    "sandbox": "npm run build && node dist/cli.js sandbox",
     "self-check": "node dist/cli.js self-check"
   },
   "devDependencies": {

@@ -47,6 +47,18 @@ MCP health:
 node dist/cli.js mcp-health --mcp config\mcp.servers.example.json
 ```
 
+Virtual sandbox UX simulation:
+
+```powershell
+npm run sandbox -- --scenario all
+```
+
+The sandbox creates throwaway repositories, runs the real CLI commands a user would run, and writes a JSON report with steps, artifacts, warnings, and suspected bugs. Current scenarios:
+
+- `first-run-plan`: scan -> queue -> run-loop in plan mode
+- `mcp-degraded`: unreachable MCP server health check
+- `openai-missing-key`: OpenAI brain provider enabled without credentials
+
 Brain provider mode:
 
 ```powershell

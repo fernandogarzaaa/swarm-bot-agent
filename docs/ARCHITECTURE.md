@@ -94,6 +94,29 @@ Commands:
 - `next-task`
 - `mcp-health`
 - `run-loop`
+- `sandbox`
+
+## Virtual Sandbox
+
+The sandbox harness simulates user workflows in isolated temporary repositories. It runs real CLI commands and produces a JSON report:
+
+- total scenarios
+- pass/warning/fail counts
+- per-step command summaries
+- generated artifact paths
+- suspected bugs with severity and recommendations
+
+Built-in scenarios:
+
+- `first-run-plan`: first-time user runs scan, queue, and plan loop.
+- `mcp-degraded`: user configures an unreachable MCP server and sees health degradation.
+- `openai-missing-key`: user enables the OpenAI brain provider without `OPENAI_API_KEY` or a token command.
+
+Run it with:
+
+```powershell
+npm run sandbox -- --scenario all
+```
 
 ## Safety Defaults
 

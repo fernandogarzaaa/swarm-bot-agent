@@ -8,6 +8,7 @@ export * from "./mcp.js";
 export * from "./mcp-health.js";
 export * from "./memory.js";
 export * from "./reflection.js";
+export * from "./sandbox.js";
 export * from "./signals.js";
 export * from "./skills.js";
 export * from "./tasks.js";
