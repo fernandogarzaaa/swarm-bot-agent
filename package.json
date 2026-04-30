@@ -1,0 +1,22 @@
+{
+  "name": "swarm-bot-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone extraction of AppForge swarm-bot as a guarded autonomous PR agent.",
+  "bin": {
+    "swarm-bot": "./dist/cli.js"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "self-check": "node dist/cli.js self-check"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

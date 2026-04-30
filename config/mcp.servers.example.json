@@ -1,0 +1,16 @@
+{
+  "servers": {
+    "chimeralang": {
+      "transport": "stdio",
+      "cwd": "D:\\chimeralang-mcp-v2-openai",
+      "command": "python",
+      "args": ["-m", "chimeralang_mcp.server"],
+      "enabled": true
+    },
+    "project-evo": {
+      "transport": "http",
+      "url": "http://127.0.0.1:8000/mcp",
+      "enabled": false
+    }
+  }
+}
