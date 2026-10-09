@@ -16,7 +16,7 @@
     "self-check": "node dist/cli.js self-check"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
+    "@types/node": "^26.6.4",
     "typescript": "^7.0.2"
   },
   "engines": {
