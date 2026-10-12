@@ -5,6 +5,8 @@ on:
     inputs:
       mode:
         description: Agent mode
+        type: choice
+        options: [plan, dry-run, apply, delegate-copilot]
         default: plan
         required: true
   schedule:
@@ -26,6 +28,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - run: node dist/cli.js run-loop --repo . --mode "${{ inputs.mode || 'plan' }}" --mcp config/mcp.servers.example.json
+      # The dispatch input reaches the shell only through an env var (never
+      # expression interpolation into the script) and is checked against an allow-list.
+      - run: |
+          case "$SWARM_MODE" in
+            plan|dry-run|apply|delegate-copilot) ;;
+            *) echo "::error::Unknown mode: $SWARM_MODE"; exit 1 ;;
+          esac
+          node dist/cli.js run-loop --repo . --mode "$SWARM_MODE" --mcp config/mcp.servers.example.json
         env:
+          SWARM_MODE: ${{ inputs.mode || 'plan' }}
           SWARM_ALLOW_MCP: "false"
