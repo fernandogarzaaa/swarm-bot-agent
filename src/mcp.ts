@@ -52,7 +52,11 @@ export class McpBridge {
         url,
         {
           method: "POST",
-          headers: { "content-type": "application/json", "content-length": Buffer.byteLength(body) }
+          headers: {
+            "content-type": "application/json",
+            "content-length": Buffer.byteLength(body),
+            "MCP-Protocol-Version": "2026-07-28"
+          }
         },
         (res) => {
           let raw = "";
@@ -116,15 +120,44 @@ export class McpBridge {
       function handleResponse(response: JsonRpcResponse): void {
         if (response.id === initId) {
           if (response.error) {
-            finish(response);
+            // Dual-era fallback: server may not support server/discover yet,
+            // try legacy initialize handshake.
+            send({
+              jsonrpc: "2.0",
+              id: initId,
+              method: "initialize",
+              params: {
+                protocolVersion: "2024-11-05",
+                capabilities: {},
+                clientInfo: { name: "swarm-bot-agent", version: "0.1.0" }
+              }
+            });
             return;
           }
           initialized = true;
-          send({ jsonrpc: "2.0", method: "notifications/initialized" });
-          send(payload);
+          // MCP 2.0 (2026-07-28): stateless, no notifications/initialized.
+          // Attach per-request protocol metadata.
+          const payloadWithMeta = {
+            ...(payload as Record<string, unknown>),
+            params: {
+              ...((payload as Record<string, unknown>).params as Record<string, unknown> ?? {}),
+              _meta: {
+                "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+                clientInfo: { name: "swarm-bot-agent", version: "0.1.0" }
+              }
+            }
+          };
+          send(payloadWithMeta);
           return;
         }
-        if (initialized && String(response.id ?? "") === targetId) {
+        if (String(response.id ?? "") === targetId) {
+          // Legacy initialize response (dual-era fallback path)
+          if (!initialized) {
+            initialized = true;
+            send({ jsonrpc: "2.0", method: "notifications/initialized" });
+            send(payload);
+            return;
+          }
           finish(response);
         }
       }
@@ -146,14 +179,17 @@ export class McpBridge {
       child.on("error", (error) => {
         fail(error);
       });
+      // MCP 2.0 (2026-07-28): use server/discover instead of initialize.
+      // Falls back to legacy initialize if the server does not support it.
       send({
         jsonrpc: "2.0",
         id: initId,
-        method: "initialize",
+        method: "server/discover",
         params: {
-          protocolVersion: "2024-11-05",
-          capabilities: {},
-          clientInfo: { name: "swarm-bot-agent", version: "0.1.0" }
+          _meta: {
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            clientInfo: { name: "swarm-bot-agent", version: "0.1.0" }
+          }
         }
       });
     });
